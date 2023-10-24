@@ -160,8 +160,8 @@ import math
 
 yldStrs = 200.
 path = 'H:/abaqusWorkingFiles/WSY'
-odbFileName = 'Job-1'
-FrameNum = -1
+odbFileName = 'Job-14'
+FrameNum = 1000
 
 GPPoints = [-1./math.sqrt(3.), 1./math.sqrt(3.)]
 weights = [1.,1.]
@@ -173,11 +173,16 @@ nodeNumAll = len(nodesAll)
 elemNumAll = len(elemsAll)
 MisesOfGPAll=session.odbs[o1.name].steps['Step-1'].frames[FrameNum].fieldOutputs['S'].values
 
-MisesOfGPMat = [[0.]*5 for i in range(elemNumAll)]
+GPNum = []
+for i in range(9):
+    GPNum.append(MisesOfGPAll[i].integrationPoint)
+maxGPNum = max(GPNum)
+
+MisesOfGPMat = [[0.]*(maxGPNum+1) for i in range(elemNumAll)]
 for i in range(len(MisesOfGPAll)):
     if MisesOfGPAll[i].instance.name == 'MATERIAL-1' :
        MisesOfGPMat[MisesOfGPAll[i].elementLabel-1][MisesOfGPAll[i].integrationPoint-1] = MisesOfGPAll[i].mises
-       MisesOfGPMat[MisesOfGPAll[i].elementLabel-1][4] = MisesOfGPAll[i].elementLabel
+       MisesOfGPMat[MisesOfGPAll[i].elementLabel-1][-1] = MisesOfGPAll[i].elementLabel
 
 areaPlastic = 0.
 volumePlastic = 0.
@@ -186,10 +191,10 @@ volumeElastic = 0.
 elemLabelPlas = []
 elemLabelElas = []
 for i in range(len(MisesOfGPMat)):
-    currentElemLabel = MisesOfGPMat[i][4]
+    currentElemLabel = MisesOfGPMat[i][-1]
 #        print(currentElemLabel)
     nodesCoordOfElem = []
-    MisesOfThisElemGP = MisesOfGPMat[currentElemLabel-1][0:4]
+    MisesOfThisElemGP = MisesOfGPMat[currentElemLabel-1][0:maxGPNum]
     if (np.array(MisesOfThisElemGP)  >= yldStrs - yldStrs * 1.e-2).all() :
         nodesLabelOfThisElem = elemsAll[i].connectivity       
         for j in range(len(nodesLabelOfThisElem)):
